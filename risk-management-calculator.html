@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Risk Management Calculator - Trading Position Sizer</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-input: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border: #475569;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title .icon {
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .form-group .hint {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper .prefix,
+        .input-wrapper .suffix {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .input-wrapper .prefix {
+            left: 15px;
+        }
+
+        .input-wrapper .suffix {
+            right: 15px;
+        }
+
+        input[type="number"],
+        input[type="text"] {
+            width: 100%;
+            padding: 14px 40px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            transition: all 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+        }
+
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .radio-btn {
+            flex: 1;
+            min-width: 60px;
+        }
+
+        .radio-btn input {
+            display: none;
+        }
+
+        .radio-btn label {
+            display: block;
+            padding: 10px 15px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .radio-btn input:checked + label {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .radio-btn label:hover {
+            border-color: var(--primary);
+        }
+
+        .calculate-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary), #7c3aed);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.3);
+        }
+
+        .calculate-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Results Section */
+        .results-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .result-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .result-card.highlight {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(124, 58, 237, 0.1));
+            border-color: var(--primary);
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .result-header .icon {
+            font-size: 1.3rem;
+        }
+
+        .result-header h3 {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .result-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .result-value.success {
+            color: var(--success);
+        }
+
+        .result-value.warning {
+            color: var(--warning);
+        }
+
+        .result-value.danger {
+            color: var(--danger);
+        }
+
+        .result-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin-top: 15px;
+        }
+
+        .progress-bar {
+            height: 12px;
+            background: var(--bg-input);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.5s ease, background 0.3s;
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* Risk Level Badge */
+        .risk-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .risk-badge.safe {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+
+        .risk-badge.moderate {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+        }
+
+        .risk-badge.high {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+        }
+
+        /* Recommendations */
+        .recommendations-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .recommendations-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px;
+            background: var(--bg-input);
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+
+        .recommendations-list li .bullet {
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        /* Warning Box */
+        .warning-box {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger);
+            border-radius: 12px;
+            padding: 16px;
+            display: none;
+        }
+
+        .warning-box.show {
+            display: block;
+        }
+
+        .warning-box h4 {
+            color: var(--danger);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .warning-box p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Advanced Settings */
+        .advanced-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: var(--bg-input);
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: background 0.2s;
+        }
+
+        .advanced-toggle:hover {
+            background: #3f4f66;
+        }
+
+        .advanced-toggle .label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .advanced-toggle .arrow {
+            transition: transform 0.3s;
+        }
+
+        .advanced-toggle.open .arrow {
+            transform: rotate(180deg);
+        }
+
+        .advanced-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .advanced-content.open {
+            max-height: 500px;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        @media (max-width: 600px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .stat-item {
+            background: var(--bg-input);
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        /* Kelly Criterion Section */
+        .kelly-section {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(37, 99, 235, 0.1));
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 15px;
+        }
+
+        .kelly-section h4 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            color: var(--success);
+        }
+
+        .kelly-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .kelly-note {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            margin-top: 40px;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-card {
+            animation: fadeIn 0.4s ease;
+        }
+
+        /* Hidden state */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Risk Management Calculator</h1>
+            <p>Professional position sizing and risk analysis for traders</p>
+        </header>
+
+        <main class="main-grid">
+            <!-- Input Section -->
+            <div class="input-section">
+                <div class="card">
+                    <h2 class="card-title">
+                        <span class="icon">📊</span>
+                        Trade Parameters
+                    </h2>
+
+                    <div class="form-group">
+                        <label for="accountBalance">Account Balance</label>
+                        <div class="input-wrapper">
+                            <span class="prefix">$</span>
+                            <input type="number" id="accountBalance" value="2500" min="1" step="100">
+                            <span class="suffix">USD</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="riskPerTrade">Risk Per Trade (%)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="riskPerTrade" value="2" min="0.1" max="100" step="0.1">
+                            <span class="suffix">%</span>
+                        </div>
+                        <div class="hint">Recommended: 1-2% per trade</div>
+                        <div class="radio-group">
+                            <div class="radio-btn">
+                                <input type="radio" name="riskPreset" id="risk1" value="1">
+                                <label for="risk1">1%</label>
+                            </div>
+                            <div class="radio-btn">
+                                <input type="radio" name="riskPreset" id="risk2" value="2" checked>
+                                <label for="risk2">2%</label>
+                            </div>
+                            <div class="radio-btn">
+                                <input type="radio" name="riskPreset" id="risk3" value="3">
+                                <label for="risk3">3%</label>
+                            </div>
+                            <div class="radio-btn">
+                                <input type="radio" name="riskPreset" id="risk5" value="5">
+                                <label for="risk5">5%</label>
+                            </div>
+                            <div class="radio-btn">
+                                <input type="radio" name="riskPreset" id="riskCustom" value="custom">
+                                <label for="riskCustom">Custom</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="simultaneousTrades">Number of Simultaneous Trades</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="simultaneousTrades" value="3" min="1" max="20" step="1">
+                            <span class="suffix">trades</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="brokerPayout">Average Broker Payout (%)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="brokerPayout" value="80" min="50" max="100" step="1">
+                            <span class="suffix">%</span>
+                        </div>
+                        <div class="hint">Typical range: 70-85%</div>
+                    </div>
+
+                    <!-- Advanced Settings -->
+                    <div class="advanced-toggle" onclick="toggleAdvanced()">
+                        <div class="label">
+                            <span>📈</span>
+                            <span>Advanced Settings</span>
+                        </div>
+                        <span class="arrow">▼</span>
+                    </div>
+
+                    <div class="advanced-content" id="advancedContent">
+                        <div class="form-group">
+                            <label for="dailyLossLimit">Daily Loss Limit (%)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="dailyLossLimit" value="5" min="1" max="50" step="0.5">
+                                <span class="suffix">%</span>
+                            </div>
+                            <div class="hint">Recommended: 5-10%</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="weeklyLossLimit">Weekly Loss Limit (%)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="weeklyLossLimit" value="10" min="1" max="50" step="0.5">
+                                <span class="suffix">%</span>
+                            </div>
+                            <div class="hint">Recommended: 10-15%</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="currentWinRate">Your Current Win Rate (%)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="currentWinRate" value="55" min="0" max="100" step="1">
+                                <span class="suffix">%</span>
+                            </div>
+                            <div class="hint">Enter your historical win rate for Kelly calculation</div>
+                        </div>
+                    </div>
+
+                    <button class="calculate-btn" onclick="calculateRisk()">
+                        Calculate Risk
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section" id="resultsSection">
+                <!-- Position Size Card -->
+                <div class="result-card highlight">
+                    <div class="result-header">
+                        <span class="icon">✅</span>
+                        <h3>RECOMMENDED POSITION SIZE</h3>
+                    </div>
+                    <div class="result-value success" id="positionSize">$50.00</div>
+                    <div class="result-subtitle" id="positionSubtitle">2% of $2,500 account</div>
+                </div>
+
+                <!-- Risk Exposure Card -->
+                <div class="result-card">
+                    <div class="result-header">
+                        <span class="icon">📊</span>
+                        <h3>RISK EXPOSURE</h3>
+                    </div>
+                    <div class="result-value" id="totalRisk">$150.00 (6%)</div>
+                    <div class="result-subtitle">Total capital at risk with <span id="tradeCount">3</span> simultaneous trades</div>
+
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="riskProgress" style="width: 6%; background: var(--warning);"></div>
+                        </div>
+                        <div class="progress-labels">
+                            <span>0%</span>
+                            <span>Safe (5%)</span>
+                            <span>Max (10%)</span>
+                            <span>20%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account Protection Card -->
+                <div class="result-card">
+                    <div class="result-header">
+                        <span class="icon">🛡️</span>
+                        <h3>ACCOUNT PROTECTION</h3>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">Consecutive Losses Survivable</div>
+                            <div class="stat-value" id="consecutiveLosses">50 trades</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Safety Buffer</div>
+                            <div class="stat-value" id="safetyBuffer">94%</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Required Win Rate</div>
+                            <div class="stat-value" id="requiredWinRate">55.56%</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Risk Level</div>
+                            <div class="stat-value">
+                                <span class="risk-badge moderate" id="riskBadge">⚠️ MODERATE</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kelly Criterion -->
+                    <div class="kelly-section" id="kellySection">
+                        <h4>📐 Kelly Criterion Recommendation</h4>
+                        <div class="kelly-value" id="kellyValue">2.78%</div>
+                        <div class="kelly-note" id="kellyNote">
+                            Based on your 55% win rate and 80% payout, optimal position size is 2.78% per trade.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recommendations Card -->
+                <div class="result-card">
+                    <div class="result-header">
+                        <span class="icon">💡</span>
+                        <h3>RECOMMENDATIONS</h3>
+                    </div>
+                    <ul class="recommendations-list" id="recommendationsList">
+                        <li>
+                            <span class="bullet">•</span>
+                            <span>Reduce simultaneous trades to 2 to stay under 5% total risk</span>
+                        </li>
+                        <li>
+                            <span class="bullet">•</span>
+                            <span>Keep position size at $50 or below</span>
+                        </li>
+                        <li>
+                            <span class="bullet">•</span>
+                            <span>Set daily loss limit: $125 (5%)</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Warning Box -->
+                <div class="warning-box" id="warningBox">
+                    <h4>⚠️ WARNING</h4>
+                    <p id="warningText">You're risking more than 10% of your account simultaneously. Professional traders recommend max 5% total risk exposure.</p>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="result-card">
+                    <div class="result-header">
+                        <span class="icon">📈</span>
+                        <h3>DAILY LIMITS</h3>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">Max Daily Loss</div>
+                            <div class="stat-value" id="maxDailyLoss">$125.00</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Max Weekly Loss</div>
+                            <div class="stat-value" id="maxWeeklyLoss">$250.00</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Max Trades/Day (at current risk)</div>
+                            <div class="stat-value" id="maxTradesDaily">2-3</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Break-Even Win Rate</div>
+                            <div class="stat-value" id="breakEvenRate">55.56%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Risk Management Calculator | Based on professional trading standards</p>
+            <p>Sources: <a href="https://www.babypips.com/tools/position-size-calculator" target="_blank">BabyPips</a>,
+            <a href="https://en.wikipedia.org/wiki/Kelly_criterion" target="_blank">Kelly Criterion</a></p>
+            <p style="margin-top: 10px; font-size: 0.8rem;">Disclaimer: This calculator is for educational purposes only. Trading involves substantial risk of loss.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up radio button handlers
+            document.querySelectorAll('input[name="riskPreset"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.value !== 'custom') {
+                        document.getElementById('riskPerTrade').value = this.value;
+                    }
+                    calculateRisk();
+                });
+            });
+
+            // Set up input handlers for real-time calculation
+            const inputs = ['accountBalance', 'riskPerTrade', 'simultaneousTrades', 'brokerPayout',
+                           'dailyLossLimit', 'weeklyLossLimit', 'currentWinRate'];
+            inputs.forEach(id => {
+                document.getElementById(id).addEventListener('input', function() {
+                    if (id === 'riskPerTrade') {
+                        // Uncheck presets when custom value entered
+                        const value = parseFloat(this.value);
+                        const presets = [1, 2, 3, 5];
+                        if (!presets.includes(value)) {
+                            document.getElementById('riskCustom').checked = true;
+                        } else {
+                            document.getElementById('risk' + value)?.click();
+                        }
+                    }
+                    calculateRisk();
+                });
+            });
+
+            // Initial calculation
+            calculateRisk();
+        });
+
+        function toggleAdvanced() {
+            const toggle = document.querySelector('.advanced-toggle');
+            const content = document.getElementById('advancedContent');
+            toggle.classList.toggle('open');
+            content.classList.toggle('open');
+        }
+
+        function formatCurrency(amount) {
+            return '$' + amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function calculateRisk() {
+            // Get input values
+            const accountBalance = parseFloat(document.getElementById('accountBalance').value) || 0;
+            const riskPerTrade = parseFloat(document.getElementById('riskPerTrade').value) || 0;
+            const simultaneousTrades = parseInt(document.getElementById('simultaneousTrades').value) || 1;
+            const brokerPayout = parseFloat(document.getElementById('brokerPayout').value) || 80;
+            const dailyLossLimit = parseFloat(document.getElementById('dailyLossLimit').value) || 5;
+            const weeklyLossLimit = parseFloat(document.getElementById('weeklyLossLimit').value) || 10;
+            const currentWinRate = parseFloat(document.getElementById('currentWinRate').value) || 50;
+
+            // Core calculations
+            const maxPositionSize = (accountBalance * riskPerTrade) / 100;
+            const totalRiskExposure = maxPositionSize * simultaneousTrades;
+            const totalRiskPercentage = (totalRiskExposure / accountBalance) * 100;
+
+            // Survival calculations
+            const consecutiveLossesBeforeBankrupt = Math.floor(accountBalance / maxPositionSize);
+            const safetyBuffer = 100 - totalRiskPercentage;
+
+            // Break-even win rate calculation (for binary options)
+            const breakEvenWinRate = 100 / (100 + brokerPayout);
+            const requiredWinRatePercent = breakEvenWinRate * 100;
+
+            // Kelly Criterion calculation
+            // Kelly % = (Win Rate * (1 + Payout)) - 1) / Payout
+            // Or: Kelly % = Win Rate - ((1 - Win Rate) / (Payout/100))
+            const winRateDecimal = currentWinRate / 100;
+            const payoutDecimal = brokerPayout / 100;
+            const kellyPercentage = ((winRateDecimal * (1 + payoutDecimal)) - 1) / payoutDecimal * 100;
+            const halfKelly = kellyPercentage / 2;
+
+            // Risk level determination
+            let riskLevel, riskClass;
+            if (totalRiskPercentage <= 5) {
+                riskLevel = '✅ SAFE';
+                riskClass = 'safe';
+            } else if (totalRiskPercentage <= 10) {
+                riskLevel = '⚠️ MODERATE';
+                riskClass = 'moderate';
+            } else {
+                riskLevel = '🚨 HIGH RISK';
+                riskClass = 'high';
+            }
+
+            // Daily limits
+            const maxDailyLoss = (accountBalance * dailyLossLimit) / 100;
+            const maxWeeklyLoss = (accountBalance * weeklyLossLimit) / 100;
+            const maxTradesPerDay = Math.floor(maxDailyLoss / maxPositionSize);
+
+            // Update UI - Position Size
+            document.getElementById('positionSize').textContent = formatCurrency(maxPositionSize);
+            document.getElementById('positionSubtitle').textContent =
+                `${riskPerTrade}% of ${formatCurrency(accountBalance)} account`;
+
+            // Update UI - Risk Exposure
+            document.getElementById('totalRisk').textContent =
+                `${formatCurrency(totalRiskExposure)} (${totalRiskPercentage.toFixed(1)}%)`;
+            document.getElementById('tradeCount').textContent = simultaneousTrades;
+
+            // Update progress bar
+            const progressFill = document.getElementById('riskProgress');
+            const progressWidth = Math.min(totalRiskPercentage, 20);
+            progressFill.style.width = (progressWidth / 20 * 100) + '%';
+
+            if (totalRiskPercentage <= 5) {
+                progressFill.style.background = 'var(--success)';
+            } else if (totalRiskPercentage <= 10) {
+                progressFill.style.background = 'var(--warning)';
+            } else {
+                progressFill.style.background = 'var(--danger)';
+            }
+
+            // Update UI - Account Protection
+            document.getElementById('consecutiveLosses').textContent =
+                consecutiveLossesBeforeBankrupt + ' trades';
+            document.getElementById('safetyBuffer').textContent =
+                safetyBuffer.toFixed(1) + '%';
+            document.getElementById('requiredWinRate').textContent =
+                requiredWinRatePercent.toFixed(2) + '%';
+
+            // Update risk badge
+            const riskBadge = document.getElementById('riskBadge');
+            riskBadge.textContent = riskLevel;
+            riskBadge.className = 'risk-badge ' + riskClass;
+
+            // Update Kelly Criterion
+            const kellySection = document.getElementById('kellySection');
+            if (kellyPercentage > 0) {
+                kellySection.style.display = 'block';
+                document.getElementById('kellyValue').textContent = kellyPercentage.toFixed(2) + '%';
+                document.getElementById('kellyNote').innerHTML =
+                    `Based on your ${currentWinRate}% win rate and ${brokerPayout}% payout.<br>
+                    <strong>Half-Kelly (safer):</strong> ${halfKelly.toFixed(2)}% per trade`;
+            } else {
+                kellySection.style.display = 'block';
+                document.getElementById('kellyValue').textContent = 'N/A';
+                document.getElementById('kellyValue').style.color = 'var(--danger)';
+                document.getElementById('kellyNote').textContent =
+                    `Your win rate (${currentWinRate}%) is below break-even (${requiredWinRatePercent.toFixed(1)}%). Do not trade until you improve your strategy.`;
+            }
+
+            // Update recommendations
+            const recommendations = generateRecommendations(
+                totalRiskPercentage,
+                simultaneousTrades,
+                maxPositionSize,
+                maxDailyLoss,
+                riskPerTrade,
+                kellyPercentage,
+                currentWinRate,
+                requiredWinRatePercent
+            );
+
+            const recommendationsList = document.getElementById('recommendationsList');
+            recommendationsList.innerHTML = recommendations.map(rec =>
+                `<li><span class="bullet">•</span><span>${rec}</span></li>`
+            ).join('');
+
+            // Update warning box
+            const warningBox = document.getElementById('warningBox');
+            const warningText = document.getElementById('warningText');
+
+            if (totalRiskPercentage > 10) {
+                warningBox.classList.add('show');
+                warningText.textContent = `You're risking ${totalRiskPercentage.toFixed(1)}% of your account simultaneously. Professional traders recommend max 5-10% total risk exposure. Consider reducing your position size or number of simultaneous trades.`;
+            } else if (currentWinRate < requiredWinRatePercent) {
+                warningBox.classList.add('show');
+                warningText.textContent = `Your current win rate (${currentWinRate}%) is below the break-even rate (${requiredWinRatePercent.toFixed(1)}%) needed for this payout. You will lose money over time at this rate.`;
+            } else {
+                warningBox.classList.remove('show');
+            }
+
+            // Update daily limits
+            document.getElementById('maxDailyLoss').textContent = formatCurrency(maxDailyLoss);
+            document.getElementById('maxWeeklyLoss').textContent = formatCurrency(maxWeeklyLoss);
+            document.getElementById('maxTradesDaily').textContent =
+                maxTradesPerDay > 0 ? `${Math.max(1, maxTradesPerDay - 1)}-${maxTradesPerDay}` : '0';
+            document.getElementById('breakEvenRate').textContent = requiredWinRatePercent.toFixed(2) + '%';
+
+            // Color code values based on risk
+            const positionSizeEl = document.getElementById('positionSize');
+            const totalRiskEl = document.getElementById('totalRisk');
+
+            positionSizeEl.className = 'result-value ' + (riskPerTrade <= 2 ? 'success' : riskPerTrade <= 3 ? 'warning' : 'danger');
+            totalRiskEl.className = 'result-value ' + riskClass;
+        }
+
+        function generateRecommendations(totalRisk, trades, positionSize, dailyLoss, riskPct, kelly, winRate, breakEven) {
+            const recommendations = [];
+
+            // Position size recommendations
+            if (totalRisk > 5 && trades > 1) {
+                const safeTrades = Math.floor(5 / riskPct);
+                recommendations.push(`Reduce simultaneous trades to ${Math.max(1, safeTrades)} to stay under 5% total risk`);
+            }
+
+            if (riskPct > 2) {
+                recommendations.push(`Consider reducing risk per trade to 2% or less for better capital preservation`);
+            }
+
+            // Kelly-based recommendations
+            if (kelly > 0 && riskPct > kelly) {
+                recommendations.push(`Kelly Criterion suggests ${kelly.toFixed(1)}% risk - you're currently risking ${riskPct}%`);
+            } else if (kelly > 0 && riskPct < kelly * 0.5) {
+                recommendations.push(`You can safely increase position size up to ${(kelly * 0.5).toFixed(1)}% (half-Kelly)`);
+            }
+
+            // Win rate recommendations
+            if (winRate < breakEven) {
+                recommendations.push(`Improve win rate above ${breakEven.toFixed(1)}% before risking real capital`);
+            } else if (winRate >= breakEven && winRate < breakEven + 5) {
+                recommendations.push(`Your edge is slim - consider paper trading until win rate exceeds ${(breakEven + 5).toFixed(0)}%`);
+            }
+
+            // Daily limit recommendation
+            recommendations.push(`Set daily loss limit: ${formatCurrency(dailyLoss)} - stop trading if reached`);
+
+            // General best practices
+            if (trades >= 3) {
+                recommendations.push(`With ${trades} simultaneous trades, ensure they are uncorrelated assets`);
+            }
+
+            return recommendations.slice(0, 5); // Limit to 5 recommendations
+        }
+    </script>
+</body>
+</html>
