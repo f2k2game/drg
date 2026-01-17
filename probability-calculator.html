@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Money Management Calculator - Binary Options Trading Tool</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --cyan: #06b6d4;
+            --cyan-dark: #0891b2;
+            --success: #10b981;
+            --success-light: rgba(16, 185, 129, 0.15);
+            --warning: #f59e0b;
+            --warning-light: rgba(245, 158, 11, 0.15);
+            --danger: #ef4444;
+            --danger-light: rgba(239, 68, 68, 0.15);
+            --purple: #8b5cf6;
+            --purple-light: rgba(139, 92, 246, 0.15);
+            --orange: #f97316;
+            --blue: #3b82f6;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-input: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border: #475569;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #06b6d4, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title.cyan { color: var(--cyan); }
+        .card-title.yellow { color: var(--warning); }
+        .card-title.green { color: var(--success); }
+        .card-title.orange { color: var(--orange); }
+        .card-title.purple { color: var(--purple); }
+
+        /* Trading Rules */
+        .rules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+        }
+
+        .rule-item {
+            background: var(--bg-input);
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+
+        .rule-item .pattern {
+            font-weight: 700;
+            font-family: monospace;
+        }
+
+        .rule-item .pattern.red { color: var(--danger); }
+        .rule-item .pattern.green { color: var(--success); }
+        .rule-item .pattern.orange { color: var(--orange); }
+        .rule-item .pattern.blue { color: var(--blue); }
+        .rule-item .pattern.purple { color: var(--purple); }
+
+        /* Settings Form */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 0;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper .suffix,
+        .input-wrapper .prefix {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .input-wrapper .prefix { left: 15px; }
+        .input-wrapper .suffix { right: 15px; }
+
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 14px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        input.with-prefix { padding-left: 35px; }
+        input.with-suffix { padding-right: 35px; }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--cyan);
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2);
+        }
+
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .form-hint {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        .payout-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .payout-row input {
+            flex: 1;
+        }
+
+        .calculate-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--cyan), var(--blue));
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(6, 182, 212, 0.3);
+        }
+
+        .calculate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Tables */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--bg-input);
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        th.green-header { background: rgba(16, 185, 129, 0.2); }
+        th.red-header { background: rgba(239, 68, 68, 0.2); }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        td.pattern {
+            font-family: monospace;
+            font-weight: 700;
+            text-align: left;
+        }
+
+        .win-char { color: var(--success); }
+        .loss-char { color: var(--danger); }
+
+        td.positive { color: var(--success); }
+        td.negative { color: var(--danger); }
+        td.cyan { color: var(--cyan); font-weight: 600; }
+
+        .row-positive { background: rgba(16, 185, 129, 0.05); }
+        .row-negative { background: rgba(239, 68, 68, 0.05); }
+
+        /* Monte Carlo Results */
+        .mc-section {
+            margin-bottom: 25px;
+        }
+
+        .mc-section h3 {
+            color: var(--blue);
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        /* Chart Visualization */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .chart-card {
+            background: var(--bg-input);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .chart-card h4 {
+            text-align: center;
+            color: var(--cyan);
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .chart-container {
+            height: 160px;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            position: relative;
+        }
+
+        .bar-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 40px;
+        }
+
+        .bar {
+            width: 30px;
+            border-radius: 4px 4px 0 0;
+            transition: height 0.5s ease;
+        }
+
+        .bar.p5 { background: var(--danger); }
+        .bar.p25 { background: var(--orange); }
+        .bar.p50 { background: var(--warning); }
+        .bar.p75 { background: var(--success); }
+        .bar.p95 { background: #86efac; }
+
+        .bar-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        .bar-value {
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .bar-value.red { color: var(--danger); }
+        .bar-value.orange { color: var(--orange); }
+        .bar-value.yellow { color: var(--warning); }
+        .bar-value.green { color: var(--success); }
+        .bar-value.light-green { color: #86efac; }
+
+        .initial-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            border-top: 2px dashed var(--cyan);
+        }
+
+        .initial-label {
+            position: absolute;
+            right: 0;
+            font-size: 0.7rem;
+            color: var(--cyan);
+            top: -15px;
+        }
+
+        .chart-stats {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+            font-size: 0.85rem;
+        }
+
+        .chart-stats span.green { color: var(--success); }
+        .chart-stats span.purple { color: var(--purple); }
+
+        /* Notes Section */
+        .notes-list {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .notes-list p {
+            margin-bottom: 8px;
+        }
+
+        .notes-list strong {
+            color: var(--text-primary);
+        }
+
+        .notes-list strong.cyan { color: var(--cyan); }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            margin-top: 40px;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--cyan);
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">
+            <span>&larr;</span>
+            <span>Back to Tools</span>
+        </a>
+
+        <header>
+            <h1>Smart Money Management Calculator</h1>
+            <p>Binary Options Risk Management System with Monte Carlo Simulation</p>
+        </header>
+
+        <!-- Trading Rules -->
+        <div class="card">
+            <h2 class="card-title yellow">Your Trading Rules</h2>
+            <div class="rules-grid">
+                <div class="rule-item">
+                    <span class="pattern red">LL</span>
+                    <span class="action"> &rarr; STOP (2 trades)</span>
+                </div>
+                <div class="rule-item">
+                    <span class="pattern green">WWW</span>
+                    <span class="action"> &rarr; STOP (3 trades)</span>
+                </div>
+                <div class="rule-item">
+                    <span class="pattern orange">WLL / LWL</span>
+                    <span class="action"> &rarr; 4th then STOP</span>
+                </div>
+                <div class="rule-item">
+                    <span class="pattern blue">WWL / WLW / LWW</span>
+                    <span class="action"> &rarr; Continue to 5</span>
+                </div>
+                <div class="rule-item" style="grid-column: span 2;">
+                    <span class="pattern purple">Max Daily Trades:</span>
+                    <span class="action"> 5 trades</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings -->
+        <div class="card">
+            <h2 class="card-title cyan">Settings</h2>
+            <div class="settings-grid">
+                <div class="form-group">
+                    <label for="initialCapital">Initial Capital</label>
+                    <div class="input-wrapper">
+                        <span class="prefix">$</span>
+                        <input type="number" id="initialCapital" value="100" min="1" class="with-prefix">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Payout Range (%)</label>
+                    <div class="payout-row">
+                        <input type="number" id="payoutMin" value="80" min="50" max="100" placeholder="Min">
+                        <input type="number" id="payoutMax" value="90" min="50" max="100" placeholder="Max">
+                    </div>
+                    <div class="form-hint">Average: <span id="avgPayout">85.0</span>%</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="riskType">Risk Type</label>
+                    <select id="riskType">
+                        <option value="fixed">Fixed Amount ($)</option>
+                        <option value="percentage">Percentage of Capital (%)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="riskValue">Risk per Trade <span id="riskUnit">($)</span></label>
+                    <input type="number" id="riskValue" value="3" min="0.1" step="0.5">
+                </div>
+
+                <div class="form-group">
+                    <label for="minTradeAmount">Broker Min Trade</label>
+                    <div class="input-wrapper">
+                        <span class="prefix">$</span>
+                        <input type="number" id="minTradeAmount" value="1" min="0.1" step="0.1" class="with-prefix">
+                    </div>
+                </div>
+
+                <div class="form-group" style="display: flex; align-items: flex-end;">
+                    <button class="calculate-btn" id="simulateBtn" onclick="runSimulation()">
+                        <span id="btnText">Run Monte Carlo Simulation</span>
+                        <span id="btnSpinner" class="spinner hidden"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- All Scenarios Table -->
+        <div class="card">
+            <h2 class="card-title cyan">All 18 Possible Daily Scenarios (at 60% win rate)</h2>
+            <div class="table-wrapper">
+                <table id="scenarioTable">
+                    <thead>
+                        <tr>
+                            <th>Pattern</th>
+                            <th>Trades</th>
+                            <th>Wins</th>
+                            <th>Losses</th>
+                            <th>Probability</th>
+                            <th>Result (Risk units)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scenarioBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Main Results Table -->
+        <div class="card">
+            <h2 class="card-title green" id="resultsTitle">Results: Fixed $3 Risk</h2>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Win Rate</th>
+                            <th>Expected Daily Return</th>
+                            <th>Daily Profit ($)</th>
+                            <th>Daily ROI (%)</th>
+                            <th class="green-header">Days to +50%</th>
+                            <th class="green-header">Days to Double</th>
+                            <th class="red-header">Days to -50% (Worst)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Risk Assessment -->
+        <div class="card">
+            <h2 class="card-title orange">Risk Assessment</h2>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Win Rate</th>
+                            <th>Losing Day Prob</th>
+                            <th>2 Consecutive Losses</th>
+                            <th>3 Consecutive Losses</th>
+                            <th>5 Consecutive Losses</th>
+                            <th>Max Single Day Loss</th>
+                        </tr>
+                    </thead>
+                    <tbody id="riskBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Monte Carlo Results -->
+        <div class="card hidden" id="monteCarloCard">
+            <h2 class="card-title purple">Monte Carlo Simulation Results (5,000 runs each)</h2>
+
+            <!-- 30-Day Projection -->
+            <div class="mc-section">
+                <h3>30-Day Projection</h3>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Win Rate</th>
+                                <th>5th %ile (Worst)</th>
+                                <th>25th %ile</th>
+                                <th>Median</th>
+                                <th>75th %ile</th>
+                                <th>95th %ile (Best)</th>
+                                <th>Profit Prob</th>
+                                <th>Double Prob</th>
+                                <th>Max Drawdown</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mc30Body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 60-Day Projection -->
+            <div class="mc-section">
+                <h3>60-Day Projection</h3>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Win Rate</th>
+                                <th>5th %ile (Worst)</th>
+                                <th>25th %ile</th>
+                                <th>Median</th>
+                                <th>75th %ile</th>
+                                <th>95th %ile (Best)</th>
+                                <th>Profit Prob</th>
+                                <th>Double Prob</th>
+                                <th>Max Drawdown</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mc60Body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 90-Day Projection -->
+            <div class="mc-section">
+                <h3>90-Day Projection</h3>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Win Rate</th>
+                                <th>5th %ile (Worst)</th>
+                                <th>25th %ile</th>
+                                <th>Median</th>
+                                <th>75th %ile</th>
+                                <th>95th %ile (Best)</th>
+                                <th>Profit Prob</th>
+                                <th>Double Prob</th>
+                                <th>Max Drawdown</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mc90Body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Growth Chart -->
+        <div class="card hidden" id="chartCard">
+            <h2 class="card-title cyan">90-Day Growth Projection Chart</h2>
+            <div class="chart-grid" id="chartGrid"></div>
+        </div>
+
+        <!-- Calculation Notes -->
+        <div class="card">
+            <h2 class="card-title" style="color: var(--text-secondary);">Calculation Notes</h2>
+            <div class="notes-list">
+                <p><strong>R</strong> = Risk unit (your trade amount)</p>
+                <p><strong>Expected Daily Return</strong> = Weighted average of all 18 possible daily outcomes</p>
+                <p><strong>Days to Double</strong> = Theoretical days assuming average daily return</p>
+                <p><strong>Monte Carlo</strong> = 5,000 simulated trading periods for realistic probability distributions</p>
+                <p><strong>Max Drawdown</strong> = 95th percentile of worst peak-to-trough decline</p>
+                <p><strong>Worst Single Day</strong> = WLLL or LWLL scenario (1 win, 3 losses)</p>
+                <p>Payout used for calculations: <strong class="cyan" id="payoutNote">85%</strong> (average of min-max range)</p>
+            </div>
+        </div>
+
+        <footer>
+            <p>Binary options trading involves substantial risk. Past performance does not guarantee future results.</p>
+            <p style="margin-top: 10px;">This calculator is for educational purposes only. Trade responsibly.</p>
+        </footer>
+    </div>
+
+    <script>
+        // ==================== CALCULATION ENGINE ====================
+
+        const WIN_RATES = [55, 60, 65, 70, 75];
+
+        // Calculate all scenario probabilities and outcomes
+        function calculateScenarios(winRate, payout) {
+            const p = winRate / 100;
+            const q = 1 - p;
+            const payoutDecimal = payout / 100;
+
+            return [
+                // 2-trade scenarios
+                { pattern: 'LL', trades: 2, wins: 0, losses: 2, prob: q * q, result: -2 },
+
+                // 3-trade scenarios
+                { pattern: 'WWW', trades: 3, wins: 3, losses: 0, prob: p * p * p, result: 3 * payoutDecimal },
+
+                // 4-trade scenarios
+                { pattern: 'WLLW', trades: 4, wins: 2, losses: 2, prob: p * q * q * p, result: 2 * payoutDecimal - 2 },
+                { pattern: 'WLLL', trades: 4, wins: 1, losses: 3, prob: p * q * q * q, result: payoutDecimal - 3 },
+                { pattern: 'LWLW', trades: 4, wins: 2, losses: 2, prob: q * p * q * p, result: 2 * payoutDecimal - 2 },
+                { pattern: 'LWLL', trades: 4, wins: 1, losses: 3, prob: q * p * q * q, result: payoutDecimal - 3 },
+
+                // 5-trade scenarios from WWL
+                { pattern: 'WWLWW', trades: 5, wins: 4, losses: 1, prob: p * p * q * p * p, result: 4 * payoutDecimal - 1 },
+                { pattern: 'WWLWL', trades: 5, wins: 3, losses: 2, prob: p * p * q * p * q, result: 3 * payoutDecimal - 2 },
+                { pattern: 'WWLLW', trades: 5, wins: 3, losses: 2, prob: p * p * q * q * p, result: 3 * payoutDecimal - 2 },
+                { pattern: 'WWLLL', trades: 5, wins: 2, losses: 3, prob: p * p * q * q * q, result: 2 * payoutDecimal - 3 },
+
+                // 5-trade scenarios from WLW
+                { pattern: 'WLWWW', trades: 5, wins: 4, losses: 1, prob: p * q * p * p * p, result: 4 * payoutDecimal - 1 },
+                { pattern: 'WLWWL', trades: 5, wins: 3, losses: 2, prob: p * q * p * p * q, result: 3 * payoutDecimal - 2 },
+                { pattern: 'WLWLW', trades: 5, wins: 3, losses: 2, prob: p * q * p * q * p, result: 3 * payoutDecimal - 2 },
+                { pattern: 'WLWLL', trades: 5, wins: 2, losses: 3, prob: p * q * p * q * q, result: 2 * payoutDecimal - 3 },
+
+                // 5-trade scenarios from LWW
+                { pattern: 'LWWWW', trades: 5, wins: 4, losses: 1, prob: q * p * p * p * p, result: 4 * payoutDecimal - 1 },
+                { pattern: 'LWWWL', trades: 5, wins: 3, losses: 2, prob: q * p * p * p * q, result: 3 * payoutDecimal - 2 },
+                { pattern: 'LWWLW', trades: 5, wins: 3, losses: 2, prob: q * p * p * q * p, result: 3 * payoutDecimal - 2 },
+                { pattern: 'LWWLL', trades: 5, wins: 2, losses: 3, prob: q * p * p * q * q, result: 2 * payoutDecimal - 3 },
+            ];
+        }
+
+        function calculateExpectedDailyReturn(winRate, payout) {
+            const scenarios = calculateScenarios(winRate, payout);
+            return scenarios.reduce((sum, s) => sum + s.prob * s.result, 0);
+        }
+
+        function calculateLosingDayProbability(winRate, payout) {
+            const scenarios = calculateScenarios(winRate, payout);
+            return scenarios.filter(s => s.result < 0).reduce((sum, s) => sum + s.prob, 0);
+        }
+
+        function calculateWorstDayLoss(payout) {
+            const payoutDecimal = payout / 100;
+            return payoutDecimal - 3;
+        }
+
+        function calculateDaysToTargetFixed(targetProfit, expectedDailyProfit) {
+            if (expectedDailyProfit <= 0) return Infinity;
+            return Math.ceil(targetProfit / expectedDailyProfit);
+        }
+
+        function calculateDaysToTargetCompounding(targetMultiplier, dailyROI) {
+            if (dailyROI <= 0) return Infinity;
+            return Math.ceil(Math.log(targetMultiplier) / Math.log(1 + dailyROI));
+        }
+
+        function calculateDaysToLoseFixed(targetLossPercent, capital, worstDayLoss, riskAmount) {
+            const worstDayLossAmount = Math.abs(worstDayLoss * riskAmount);
+            const targetLossAmount = capital * (targetLossPercent / 100);
+            return Math.ceil(targetLossAmount / worstDayLossAmount);
+        }
+
+        // Monte Carlo Simulation
+        function runMonteCarloSimulation(initialCapital, riskType, riskValue, winRate, payout, days, simulations, minTradeAmount) {
+            const scenarios = calculateScenarios(winRate, payout);
+            const cumulativeProbs = [];
+            let cumProb = 0;
+            scenarios.forEach(s => {
+                cumProb += s.prob;
+                cumulativeProbs.push({ cumProb, result: s.result });
+            });
+
+            const results = [];
+            const drawdowns = [];
+
+            for (let sim = 0; sim < simulations; sim++) {
+                let capital = initialCapital;
+                let peakCapital = initialCapital;
+                let maxDrawdown = 0;
+
+                for (let day = 0; day < days; day++) {
+                    let riskAmount;
+                    if (riskType === 'fixed') {
+                        riskAmount = Math.min(riskValue, capital);
+                    } else {
+                        riskAmount = capital * (riskValue / 100);
+                    }
+
+                    if (riskAmount < minTradeAmount) {
+                        riskAmount = Math.min(minTradeAmount, capital);
+                    }
+
+                    if (capital < minTradeAmount) break;
+
+                    const rand = Math.random();
+                    let dayResult = 0;
+                    for (const cp of cumulativeProbs) {
+                        if (rand <= cp.cumProb) {
+                            dayResult = cp.result * riskAmount;
+                            break;
+                        }
+                    }
+
+                    capital += dayResult;
+                    capital = Math.max(0, capital);
+
+                    if (capital > peakCapital) peakCapital = capital;
+                    const currentDrawdown = (peakCapital - capital) / peakCapital;
+                    if (currentDrawdown > maxDrawdown) maxDrawdown = currentDrawdown;
+                }
+
+                results.push(capital);
+                drawdowns.push(maxDrawdown);
+            }
+
+            results.sort((a, b) => a - b);
+            drawdowns.sort((a, b) => a - b);
+
+            return {
+                median: results[Math.floor(simulations / 2)],
+                percentile5: results[Math.floor(simulations * 0.05)],
+                percentile25: results[Math.floor(simulations * 0.25)],
+                percentile75: results[Math.floor(simulations * 0.75)],
+                percentile95: results[Math.floor(simulations * 0.95)],
+                mean: results.reduce((a, b) => a + b, 0) / simulations,
+                maxDrawdownMedian: drawdowns[Math.floor(simulations / 2)],
+                maxDrawdown95: drawdowns[Math.floor(simulations * 0.95)],
+                profitProbability: results.filter(r => r > initialCapital).length / simulations,
+                bustProbability: results.filter(r => r < initialCapital * 0.1).length / simulations,
+                doubleProbability: results.filter(r => r >= initialCapital * 2).length / simulations,
+            };
+        }
+
+        // ==================== UI FUNCTIONS ====================
+
+        function getInputValues() {
+            return {
+                initialCapital: parseFloat(document.getElementById('initialCapital').value) || 100,
+                payoutMin: parseFloat(document.getElementById('payoutMin').value) || 80,
+                payoutMax: parseFloat(document.getElementById('payoutMax').value) || 90,
+                riskType: document.getElementById('riskType').value,
+                riskValue: parseFloat(document.getElementById('riskValue').value) || 3,
+                minTradeAmount: parseFloat(document.getElementById('minTradeAmount').value) || 1,
+            };
+        }
+
+        function getAvgPayout() {
+            const { payoutMin, payoutMax } = getInputValues();
+            return (payoutMin + payoutMax) / 2;
+        }
+
+        function formatPattern(pattern) {
+            return pattern.split('').map(c =>
+                `<span class="${c === 'W' ? 'win-char' : 'loss-char'}">${c}</span>`
+            ).join('');
+        }
+
+        function updateScenarioTable() {
+            const avgPayout = getAvgPayout();
+            const scenarios = calculateScenarios(60, avgPayout);
+
+            const tbody = document.getElementById('scenarioBody');
+            tbody.innerHTML = scenarios.map(s => {
+                const resultDisplay = s.result >= 0 ? `+${s.result.toFixed(2)}R` : `${s.result.toFixed(2)}R`;
+                return `
+                    <tr class="${s.result >= 0 ? 'row-positive' : 'row-negative'}">
+                        <td class="pattern">${formatPattern(s.pattern)}</td>
+                        <td>${s.trades}</td>
+                        <td class="positive">${s.wins}</td>
+                        <td class="negative">${s.losses}</td>
+                        <td>${(s.prob * 100).toFixed(2)}%</td>
+                        <td class="${s.result >= 0 ? 'positive' : 'negative'}">${resultDisplay}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateResultsTable() {
+            const { initialCapital, riskType, riskValue } = getInputValues();
+            const avgPayout = getAvgPayout();
+            const worstDayLoss = calculateWorstDayLoss(avgPayout);
+
+            // Update title
+            const titleText = riskType === 'fixed'
+                ? `Results: Fixed $${riskValue} Risk`
+                : `Results: ${riskValue}% of Capital Risk`;
+            document.getElementById('resultsTitle').textContent = titleText;
+
+            const tbody = document.getElementById('resultsBody');
+            tbody.innerHTML = WIN_RATES.map(wr => {
+                const expectedReturn = calculateExpectedDailyReturn(wr, avgPayout);
+                let daysToDouble, daysTo50Profit, dailyProfitAmount, dailyROI;
+
+                if (riskType === 'fixed') {
+                    const riskAmount = Math.min(riskValue, initialCapital);
+                    dailyProfitAmount = expectedReturn * riskAmount;
+                    dailyROI = (dailyProfitAmount / initialCapital) * 100;
+                    daysToDouble = calculateDaysToTargetFixed(initialCapital, dailyProfitAmount);
+                    daysTo50Profit = calculateDaysToTargetFixed(initialCapital * 0.5, dailyProfitAmount);
+                } else {
+                    const riskPercent = riskValue / 100;
+                    dailyROI = expectedReturn * riskPercent * 100;
+                    dailyProfitAmount = initialCapital * (dailyROI / 100);
+                    daysToDouble = calculateDaysToTargetCompounding(2, dailyROI / 100);
+                    daysTo50Profit = calculateDaysToTargetCompounding(1.5, dailyROI / 100);
+                }
+
+                const riskAmount = riskType === 'fixed' ? riskValue : initialCapital * riskValue / 100;
+                const daysTo50Loss = calculateDaysToLoseFixed(50, initialCapital, worstDayLoss, riskAmount);
+
+                const returnClass = expectedReturn >= 0 ? 'positive' : 'negative';
+                const returnSign = expectedReturn >= 0 ? '+' : '';
+                const roiSign = dailyROI >= 0 ? '+' : '';
+
+                return `
+                    <tr>
+                        <td class="cyan">${wr}%</td>
+                        <td class="${returnClass}">${returnSign}${expectedReturn.toFixed(3)}R</td>
+                        <td class="${returnClass}">$${dailyProfitAmount.toFixed(2)}</td>
+                        <td class="${returnClass}">${roiSign}${dailyROI.toFixed(2)}%</td>
+                        <td class="positive">${daysTo50Profit === Infinity ? '&infin;' : daysTo50Profit}</td>
+                        <td class="positive">${daysToDouble === Infinity ? '&infin;' : daysToDouble}</td>
+                        <td class="negative">${daysTo50Loss === Infinity ? 'Very Unlikely' : daysTo50Loss}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateRiskTable() {
+            const { initialCapital, riskType, riskValue } = getInputValues();
+            const avgPayout = getAvgPayout();
+            const worstDayLoss = calculateWorstDayLoss(avgPayout);
+            const riskAmount = riskType === 'fixed' ? riskValue : initialCapital * riskValue / 100;
+
+            const tbody = document.getElementById('riskBody');
+            tbody.innerHTML = WIN_RATES.map(wr => {
+                const losingDayProb = calculateLosingDayProbability(wr, avgPayout);
+                const consec2 = Math.pow(losingDayProb, 2) * 100;
+                const consec3 = Math.pow(losingDayProb, 3) * 100;
+                const consec5 = Math.pow(losingDayProb, 5) * 100;
+                const maxLossAmount = Math.abs(worstDayLoss) * riskAmount;
+
+                return `
+                    <tr>
+                        <td class="cyan">${wr}%</td>
+                        <td style="color: var(--warning);">${(losingDayProb * 100).toFixed(1)}%</td>
+                        <td style="color: var(--orange);">${consec2.toFixed(2)}%</td>
+                        <td style="color: var(--orange);">${consec3.toFixed(2)}%</td>
+                        <td class="negative">${consec5.toFixed(3)}%</td>
+                        <td class="negative">
+                            ${worstDayLoss.toFixed(2)}R
+                            <span style="color: var(--text-secondary); font-size: 0.8rem;">($${maxLossAmount.toFixed(2)})</span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateUI() {
+            const avgPayout = getAvgPayout();
+            document.getElementById('avgPayout').textContent = avgPayout.toFixed(1);
+            document.getElementById('payoutNote').textContent = avgPayout.toFixed(0) + '%';
+
+            const riskType = document.getElementById('riskType').value;
+            document.getElementById('riskUnit').textContent = riskType === 'fixed' ? '($)' : '(%)';
+
+            updateScenarioTable();
+            updateResultsTable();
+            updateRiskTable();
+        }
+
+        function renderMonteCarloTable(bodyId, results, initialCapital) {
+            const tbody = document.getElementById(bodyId);
+            tbody.innerHTML = WIN_RATES.map(wr => {
+                const r = results[wr];
+                if (!r) return '';
+                return `
+                    <tr>
+                        <td class="cyan">${wr}%</td>
+                        <td class="negative">$${r.percentile5.toFixed(2)}</td>
+                        <td style="color: var(--orange);">$${r.percentile25.toFixed(2)}</td>
+                        <td style="color: var(--warning); font-weight: bold;">$${r.median.toFixed(2)}</td>
+                        <td class="positive">$${r.percentile75.toFixed(2)}</td>
+                        <td style="color: #86efac;">$${r.percentile95.toFixed(2)}</td>
+                        <td style="color: var(--blue);">${(r.profitProbability * 100).toFixed(1)}%</td>
+                        <td style="color: var(--purple);">${(r.doubleProbability * 100).toFixed(1)}%</td>
+                        <td class="negative">${(r.maxDrawdown95 * 100).toFixed(1)}%</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderCharts(results, initialCapital) {
+            const chartGrid = document.getElementById('chartGrid');
+            chartGrid.innerHTML = WIN_RATES.map(wr => {
+                const r = results[wr];
+                if (!r) return '';
+
+                const maxValue = Math.max(r.percentile95, initialCapital * 2);
+                const getHeight = (val) => Math.max(5, (val / maxValue) * 120);
+                const initialHeight = (initialCapital / maxValue) * 100;
+
+                return `
+                    <div class="chart-card">
+                        <h4>${wr}% Win Rate</h4>
+                        <div class="chart-container">
+                            <div class="initial-line" style="bottom: ${initialHeight}%;">
+                                <span class="initial-label">Start: $${initialCapital}</span>
+                            </div>
+                            <div class="bar-group">
+                                <div class="bar p5" style="height: ${getHeight(r.percentile5)}px;"></div>
+                                <span class="bar-label">5%</span>
+                                <span class="bar-value red">$${r.percentile5.toFixed(0)}</span>
+                            </div>
+                            <div class="bar-group">
+                                <div class="bar p25" style="height: ${getHeight(r.percentile25)}px;"></div>
+                                <span class="bar-label">25%</span>
+                                <span class="bar-value orange">$${r.percentile25.toFixed(0)}</span>
+                            </div>
+                            <div class="bar-group">
+                                <div class="bar p50" style="height: ${getHeight(r.median)}px;"></div>
+                                <span class="bar-label">50%</span>
+                                <span class="bar-value yellow">$${r.median.toFixed(0)}</span>
+                            </div>
+                            <div class="bar-group">
+                                <div class="bar p75" style="height: ${getHeight(r.percentile75)}px;"></div>
+                                <span class="bar-label">75%</span>
+                                <span class="bar-value green">$${r.percentile75.toFixed(0)}</span>
+                            </div>
+                            <div class="bar-group">
+                                <div class="bar p95" style="height: ${getHeight(r.percentile95)}px;"></div>
+                                <span class="bar-label">95%</span>
+                                <span class="bar-value light-green">$${r.percentile95.toFixed(0)}</span>
+                            </div>
+                        </div>
+                        <div class="chart-stats">
+                            <span class="green">Profit: ${(r.profitProbability * 100).toFixed(0)}%</span>
+                            <span>|</span>
+                            <span class="purple">2x: ${(r.doubleProbability * 100).toFixed(0)}%</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function runSimulation() {
+            const btn = document.getElementById('simulateBtn');
+            const btnText = document.getElementById('btnText');
+            const btnSpinner = document.getElementById('btnSpinner');
+
+            btn.disabled = true;
+            btnText.textContent = 'Calculating...';
+            btnSpinner.classList.remove('hidden');
+
+            const { initialCapital, riskType, riskValue, minTradeAmount } = getInputValues();
+            const avgPayout = getAvgPayout();
+
+            setTimeout(() => {
+                const results30 = {};
+                const results60 = {};
+                const results90 = {};
+
+                WIN_RATES.forEach(wr => {
+                    results30[wr] = runMonteCarloSimulation(initialCapital, riskType, riskValue, wr, avgPayout, 30, 5000, minTradeAmount);
+                    results60[wr] = runMonteCarloSimulation(initialCapital, riskType, riskValue, wr, avgPayout, 60, 5000, minTradeAmount);
+                    results90[wr] = runMonteCarloSimulation(initialCapital, riskType, riskValue, wr, avgPayout, 90, 5000, minTradeAmount);
+                });
+
+                renderMonteCarloTable('mc30Body', results30, initialCapital);
+                renderMonteCarloTable('mc60Body', results60, initialCapital);
+                renderMonteCarloTable('mc90Body', results90, initialCapital);
+                renderCharts(results90, initialCapital);
+
+                document.getElementById('monteCarloCard').classList.remove('hidden');
+                document.getElementById('chartCard').classList.remove('hidden');
+
+                btn.disabled = false;
+                btnText.textContent = 'Run Monte Carlo Simulation';
+                btnSpinner.classList.add('hidden');
+
+                // Scroll to results
+                document.getElementById('monteCarloCard').scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = ['initialCapital', 'payoutMin', 'payoutMax', 'riskType', 'riskValue', 'minTradeAmount'];
+            inputs.forEach(id => {
+                document.getElementById(id).addEventListener('input', updateUI);
+                document.getElementById(id).addEventListener('change', updateUI);
+            });
+
+            updateUI();
+        });
+    </script>
+</body>
+</html>
