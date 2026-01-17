@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Win Rate & Break-Even Calculator - Trading Tool</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #10b981;
+            --success-light: rgba(16, 185, 129, 0.15);
+            --warning: #f59e0b;
+            --warning-light: rgba(245, 158, 11, 0.15);
+            --danger: #ef4444;
+            --danger-light: rgba(239, 68, 68, 0.15);
+            --excellent: #8b5cf6;
+            --excellent-light: rgba(139, 92, 246, 0.15);
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-input: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border: #475569;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title .icon {
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .form-group .hint {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper .suffix {
+            position: absolute;
+            top: 50%;
+            right: 15px;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .input-wrapper .prefix {
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        input[type="number"],
+        input[type="text"] {
+            width: 100%;
+            padding: 14px 40px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            transition: all 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+        }
+
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .radio-btn {
+            flex: 1;
+            min-width: 60px;
+        }
+
+        .radio-btn input {
+            display: none;
+        }
+
+        .radio-btn label {
+            display: block;
+            padding: 10px 15px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .radio-btn input:checked + label {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .radio-btn label:hover {
+            border-color: var(--primary);
+        }
+
+        .calculate-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary), #7c3aed);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.3);
+        }
+
+        .calculate-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Results Section */
+        .results-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .result-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            animation: fadeIn 0.4s ease;
+        }
+
+        .result-card.highlight {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(124, 58, 237, 0.1));
+            border-color: var(--primary);
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .result-header .icon {
+            font-size: 1.3rem;
+        }
+
+        .result-header h3 {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .result-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .result-value.large {
+            font-size: 2.5rem;
+        }
+
+        .result-value.success {
+            color: var(--success);
+        }
+
+        .result-value.warning {
+            color: var(--warning);
+        }
+
+        .result-value.danger {
+            color: var(--danger);
+        }
+
+        .result-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Break-even display box */
+        .breakeven-box {
+            background: var(--bg-input);
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .breakeven-box .label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .breakeven-box .value {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .breakeven-box .subtitle {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 10px;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin-top: 15px;
+        }
+
+        .progress-bar {
+            height: 20px;
+            background: var(--bg-input);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 8px;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease, background 0.3s;
+        }
+
+        .progress-marker {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: white;
+            transform: translateX(-50%);
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* Dual Progress Bars */
+        .dual-progress {
+            margin: 20px 0;
+        }
+
+        .dual-progress .bar-wrapper {
+            margin-bottom: 15px;
+        }
+
+        .dual-progress .bar-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.85rem;
+        }
+
+        .dual-progress .bar-label .name {
+            color: var(--text-secondary);
+        }
+
+        .dual-progress .bar-label .value {
+            font-weight: 600;
+        }
+
+        .dual-progress .progress-bar {
+            height: 14px;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 1rem;
+            margin-top: 10px;
+        }
+
+        .status-badge.profitable {
+            background: var(--success-light);
+            color: var(--success);
+        }
+
+        .status-badge.marginal {
+            background: var(--warning-light);
+            color: var(--warning);
+        }
+
+        .status-badge.losing {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+
+        .status-badge.excellent {
+            background: var(--excellent-light);
+            color: var(--excellent);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        @media (max-width: 600px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .stat-item {
+            background: var(--bg-input);
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .stat-value.success { color: var(--success); }
+        .stat-value.warning { color: var(--warning); }
+        .stat-value.danger { color: var(--danger); }
+
+        /* Broker Comparison Table */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 12px 8px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .comparison-table th {
+            background: var(--bg-input);
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .comparison-table tr.current-row {
+            background: rgba(37, 99, 235, 0.1);
+        }
+
+        .comparison-table tr.current-row td {
+            font-weight: 600;
+        }
+
+        .comparison-table .status-cell {
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .comparison-table .status-cell.profitable { color: var(--success); }
+        .comparison-table .status-cell.marginal { color: var(--warning); }
+        .comparison-table .status-cell.losing { color: var(--danger); }
+        .comparison-table .status-cell.excellent { color: var(--excellent); }
+
+        /* Recommendation Box */
+        .recommendation-box {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(37, 99, 235, 0.1));
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+
+        .recommendation-box h4 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .recommendation-box p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            background: var(--bg-input);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+
+        .chart-container h4 {
+            margin-bottom: 15px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .chart {
+            height: 200px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            padding-bottom: 30px;
+            position: relative;
+        }
+
+        .chart::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 50%;
+            border-top: 1px dashed var(--border);
+        }
+
+        .chart-bar {
+            flex: 1;
+            margin: 0 5px;
+            border-radius: 4px 4px 0 0;
+            position: relative;
+            transition: height 0.3s ease;
+            min-height: 5px;
+        }
+
+        .chart-bar .label {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .chart-bar .value {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .chart-bar.positive {
+            background: var(--success);
+        }
+
+        .chart-bar.negative {
+            background: var(--danger);
+        }
+
+        .chart-bar.neutral {
+            background: var(--warning);
+        }
+
+        .chart-bar.current {
+            border: 2px solid var(--primary);
+        }
+
+        .chart-zero-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 50%;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            margin-top: 40px;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Margin adjustment box */
+        .margin-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .margin-item {
+            text-align: center;
+        }
+
+        .margin-item .label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .margin-item .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .margin-item .value.positive {
+            color: var(--success);
+        }
+
+        .margin-item .value.negative {
+            color: var(--danger);
+        }
+
+        .margin-arrow {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        /* Info tooltip */
+        .info-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background: var(--bg-input);
+            border-radius: 50%;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            cursor: help;
+            margin-left: 5px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Back link */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">
+            <span>&larr;</span>
+            <span>Back to Tools</span>
+        </a>
+
+        <header>
+            <h1>Win Rate & Break-Even Calculator</h1>
+            <p>Calculate the minimum win rate needed to profit with your broker's payout</p>
+        </header>
+
+        <main class="main-grid">
+            <!-- Input Section -->
+            <div class="input-section">
+                <div class="card">
+                    <h2 class="card-title">
+                        <span class="icon">&#127919;</span>
+                        Calculator Settings
+                    </h2>
+
+                    <div class="form-group">
+                        <label for="payoutPercentage">Broker Payout Percentage</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="payoutPercentage" value="80" min="50" max="100" step="1">
+                            <span class="suffix">%</span>
+                        </div>
+                        <div class="hint">The return percentage your broker offers on winning trades</div>
+                        <div class="radio-group">
+                            <div class="radio-btn">
+                                <input type="radio" name="payoutPreset" id="payout70" value="70">
+                                <label for="payout70">70%</label>
+                            </div>
+                            <div class="radio-btn">
+                                <input type="radio" name="payoutPreset" id="payout75" value="75">
+                                <label for="payout75">75%</label>
+                            </div>
+                            <div class="radio-btn">
+                                <input type="radio" name="payoutPreset" id="payout80" value="80" checked>
+                                <label for="payout80">80%</label>
+                            </div>
+                            <div class="radio-btn">
+                                <input type="radio" name="payoutPreset" id="payout85" value="85">
+                                <label for="payout85">85%</label>
+                            </div>
+                            <div class="radio-btn">
+                                <input type="radio" name="payoutPreset" id="payout90" value="90">
+                                <label for="payout90">90%</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="userWinRate">Your Current Win Rate (optional)
+                            <span class="info-icon" title="Enter your historical win rate to see profitability analysis">?</span>
+                        </label>
+                        <div class="input-wrapper">
+                            <input type="number" id="userWinRate" value="60" min="0" max="100" step="0.1" placeholder="e.g., 60">
+                            <span class="suffix">%</span>
+                        </div>
+                        <div class="hint">Enter your actual or expected win rate for detailed analysis</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tradeAmount">Trade Amount (for ROI calculation)</label>
+                        <div class="input-wrapper">
+                            <span class="prefix">$</span>
+                            <input type="number" id="tradeAmount" value="10" min="1" step="1">
+                            <span class="suffix">per trade</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rebatePercentage">Broker Rebate on Loss (optional)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="rebatePercentage" value="0" min="0" max="50" step="1">
+                            <span class="suffix">%</span>
+                        </div>
+                        <div class="hint">Some brokers return a percentage on losing trades</div>
+                    </div>
+
+                    <button class="calculate-btn" onclick="calculateBreakEven()">
+                        Calculate Break-Even
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section" id="resultsSection">
+                <!-- Required Win Rate Card -->
+                <div class="result-card highlight">
+                    <div class="result-header">
+                        <span class="icon">&#127919;</span>
+                        <h3>REQUIRED WIN RATE</h3>
+                    </div>
+                    <div class="breakeven-box">
+                        <div class="label">You need to win at least:</div>
+                        <div class="value" id="breakEvenRate">55.56%</div>
+                        <div class="subtitle">of trades to break even with <span id="currentPayoutDisplay">80%</span> payout</div>
+                    </div>
+                </div>
+
+                <!-- Performance Status Card -->
+                <div class="result-card" id="performanceCard">
+                    <div class="result-header">
+                        <span class="icon">&#128200;</span>
+                        <h3>YOUR PERFORMANCE STATUS</h3>
+                    </div>
+
+                    <div class="margin-display">
+                        <div class="margin-item">
+                            <div class="label">Your Win Rate</div>
+                            <div class="value" id="displayUserWinRate">60%</div>
+                        </div>
+                        <div class="margin-arrow">&#8594;</div>
+                        <div class="margin-item">
+                            <div class="label">Required</div>
+                            <div class="value" id="displayRequired">55.56%</div>
+                        </div>
+                        <div class="margin-arrow">=</div>
+                        <div class="margin-item">
+                            <div class="label">Margin</div>
+                            <div class="value positive" id="displayMargin">+4.44%</div>
+                        </div>
+                    </div>
+
+                    <div class="status-badge profitable" id="statusBadge">
+                        <span id="statusIcon">&#10004;</span>
+                        <span id="statusText">PROFITABLE</span>
+                    </div>
+
+                    <div class="dual-progress">
+                        <div class="bar-wrapper">
+                            <div class="bar-label">
+                                <span class="name">Your Win Rate</span>
+                                <span class="value" id="winRateBarValue">60%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="winRateBar" style="width: 60%; background: var(--success);"></div>
+                            </div>
+                        </div>
+                        <div class="bar-wrapper">
+                            <div class="bar-label">
+                                <span class="name">Break-Even Rate</span>
+                                <span class="value" id="breakEvenBarValue">55.56%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="breakEvenBar" style="width: 55.56%; background: var(--warning);"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Expected Return Card -->
+                <div class="result-card" id="expectedReturnCard">
+                    <div class="result-header">
+                        <span class="icon">&#128176;</span>
+                        <h3>EXPECTED RETURN (per 100 trades)</h3>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">Total Investment</div>
+                            <div class="stat-value" id="totalInvestment">$1,000</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Winning Trades Return</div>
+                            <div class="stat-value success" id="winningReturn">$1,080</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Losing Trades Lost</div>
+                            <div class="stat-value danger" id="losingAmount">$400</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Net Profit/Loss</div>
+                            <div class="stat-value success" id="netProfit">+$80</div>
+                        </div>
+                    </div>
+
+                    <div class="recommendation-box">
+                        <h4>&#128200; ROI Analysis</h4>
+                        <p id="roiAnalysis">With a 60% win rate at 80% payout, your expected ROI is +8.0% per 100 trades. This is a sustainable edge.</p>
+                    </div>
+                </div>
+
+                <!-- Broker Comparison Table -->
+                <div class="result-card">
+                    <div class="result-header">
+                        <span class="icon">&#128202;</span>
+                        <h3>BROKER COMPARISON TABLE</h3>
+                    </div>
+
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Payout</th>
+                                <th>Break-Even</th>
+                                <th>Your ROI</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparisonTableBody">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Win Rate Impact Chart -->
+                <div class="result-card">
+                    <div class="result-header">
+                        <span class="icon">&#128200;</span>
+                        <h3>WIN RATE IMPACT VISUALIZATION</h3>
+                    </div>
+
+                    <div class="chart-container">
+                        <h4>ROI% at different win rates (with <span id="chartPayoutDisplay">80%</span> payout)</h4>
+                        <div class="chart" id="roiChart">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                        <div class="progress-labels">
+                            <span>&#8595; Losses</span>
+                            <span>Break-even &#8593;</span>
+                            <span>&#8593; Profits</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recommendation Card -->
+                <div class="result-card">
+                    <div class="result-header">
+                        <span class="icon">&#128161;</span>
+                        <h3>RECOMMENDATION</h3>
+                    </div>
+                    <div class="recommendation-box" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(37, 99, 235, 0.1));">
+                        <p id="mainRecommendation">
+                            Your 60% win rate is profitable with your current broker (80% payout).
+                            Switching to a broker with 85% payout would increase your ROI from 8% to 14%.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Win Rate & Break-Even Calculator | Professional Trading Analysis Tool</p>
+            <p style="margin-top: 10px;">
+                Sources:
+                <a href="https://www.theoptionsguide.com/binary-options-win-rate-payout-breakeven.aspx" target="_blank">The Options Guide</a>,
+                <a href="https://www.binarytrading.com/break-even-ratios-in-binary-trading/" target="_blank">Binary Trading</a>,
+                <a href="https://clearank.com/tools/breakeven-win-rate-calculator/" target="_blank">Clearank Calculator</a>
+            </p>
+            <p style="margin-top: 10px; font-size: 0.8rem;">
+                Disclaimer: This calculator is for educational purposes only. Trading involves substantial risk of loss.
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up payout preset handlers
+            document.querySelectorAll('input[name="payoutPreset"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    document.getElementById('payoutPercentage').value = this.value;
+                    calculateBreakEven();
+                });
+            });
+
+            // Set up real-time calculation on input change
+            const inputs = ['payoutPercentage', 'userWinRate', 'tradeAmount', 'rebatePercentage'];
+            inputs.forEach(id => {
+                document.getElementById(id).addEventListener('input', function() {
+                    if (id === 'payoutPercentage') {
+                        // Update radio buttons
+                        const value = parseInt(this.value);
+                        const presets = [70, 75, 80, 85, 90];
+                        document.querySelectorAll('input[name="payoutPreset"]').forEach(radio => {
+                            radio.checked = parseInt(radio.value) === value;
+                        });
+                    }
+                    calculateBreakEven();
+                });
+            });
+
+            // Initial calculation
+            calculateBreakEven();
+        });
+
+        function formatCurrency(amount) {
+            return '$' + amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        }
+
+        function formatPercent(value, decimals = 2) {
+            return value.toFixed(decimals) + '%';
+        }
+
+        function calculateBreakEven() {
+            // Get input values
+            const payout = parseFloat(document.getElementById('payoutPercentage').value) || 80;
+            const userWinRate = parseFloat(document.getElementById('userWinRate').value) || 0;
+            const tradeAmount = parseFloat(document.getElementById('tradeAmount').value) || 10;
+            const rebate = parseFloat(document.getElementById('rebatePercentage').value) || 0;
+
+            // Calculate break-even win rate
+            // Formula: BE% = (100 - rebate) / (payout + (100 - rebate))
+            const effectiveLoss = 100 - rebate;
+            const breakEvenRate = (effectiveLoss / (payout + effectiveLoss)) * 100;
+
+            // Update main break-even display
+            document.getElementById('breakEvenRate').textContent = formatPercent(breakEvenRate);
+            document.getElementById('currentPayoutDisplay').textContent = formatPercent(payout, 0);
+            document.getElementById('chartPayoutDisplay').textContent = formatPercent(payout, 0);
+
+            // Calculate performance metrics if user entered win rate
+            const hasWinRate = userWinRate > 0;
+            const margin = userWinRate - breakEvenRate;
+
+            // Expected ROI calculation
+            // ROI = (winRate * payout) - ((100 - winRate) * (100 - rebate)) / 100
+            const expectedROI = ((userWinRate / 100 * payout) - ((100 - userWinRate) / 100 * effectiveLoss));
+
+            // Update performance status card
+            if (hasWinRate) {
+                document.getElementById('performanceCard').classList.remove('hidden');
+                document.getElementById('expectedReturnCard').classList.remove('hidden');
+
+                // Update margin display
+                document.getElementById('displayUserWinRate').textContent = formatPercent(userWinRate);
+                document.getElementById('displayRequired').textContent = formatPercent(breakEvenRate);
+
+                const marginEl = document.getElementById('displayMargin');
+                marginEl.textContent = (margin >= 0 ? '+' : '') + formatPercent(margin);
+                marginEl.className = 'value ' + (margin >= 0 ? 'positive' : 'negative');
+
+                // Update status badge
+                const statusBadge = document.getElementById('statusBadge');
+                const statusIcon = document.getElementById('statusIcon');
+                const statusText = document.getElementById('statusText');
+
+                if (margin >= 10) {
+                    statusBadge.className = 'status-badge excellent';
+                    statusIcon.innerHTML = '&#9733;';
+                    statusText.textContent = 'EXCELLENT';
+                } else if (margin >= 2) {
+                    statusBadge.className = 'status-badge profitable';
+                    statusIcon.innerHTML = '&#10004;';
+                    statusText.textContent = 'PROFITABLE';
+                } else if (margin >= -2) {
+                    statusBadge.className = 'status-badge marginal';
+                    statusIcon.innerHTML = '&#9888;';
+                    statusText.textContent = 'MARGINAL';
+                } else {
+                    statusBadge.className = 'status-badge losing';
+                    statusIcon.innerHTML = '&#10006;';
+                    statusText.textContent = 'LOSING';
+                }
+
+                // Update progress bars
+                document.getElementById('winRateBarValue').textContent = formatPercent(userWinRate);
+                document.getElementById('breakEvenBarValue').textContent = formatPercent(breakEvenRate);
+
+                const winRateBar = document.getElementById('winRateBar');
+                winRateBar.style.width = userWinRate + '%';
+                winRateBar.style.background = margin >= 0 ? 'var(--success)' : 'var(--danger)';
+
+                document.getElementById('breakEvenBar').style.width = breakEvenRate + '%';
+
+                // Update expected return calculations (per 100 trades)
+                const totalInvestment = tradeAmount * 100;
+                const winningTrades = userWinRate;
+                const losingTrades = 100 - userWinRate;
+
+                // Winning return: original stake + profit
+                const winningReturn = winningTrades * (tradeAmount + (tradeAmount * payout / 100));
+                // Losing amount: stake lost minus any rebate
+                const losingAmount = losingTrades * (tradeAmount * (effectiveLoss / 100));
+                const netProfit = winningReturn - losingAmount - (winningTrades * tradeAmount);
+
+                document.getElementById('totalInvestment').textContent = formatCurrency(totalInvestment);
+                document.getElementById('winningReturn').textContent = formatCurrency(winningReturn);
+                document.getElementById('losingAmount').textContent = formatCurrency(losingAmount);
+
+                const netProfitEl = document.getElementById('netProfit');
+                const actualNetProfit = (winningReturn - totalInvestment) - (losingAmount);
+                const finalProfit = totalInvestment + (totalInvestment * expectedROI / 100) - totalInvestment;
+                netProfitEl.textContent = (finalProfit >= 0 ? '+' : '') + formatCurrency(finalProfit);
+                netProfitEl.className = 'stat-value ' + (finalProfit >= 0 ? 'success' : 'danger');
+
+                // Update ROI analysis
+                const roiText = document.getElementById('roiAnalysis');
+                if (expectedROI > 0) {
+                    roiText.textContent = `With a ${formatPercent(userWinRate)} win rate at ${formatPercent(payout, 0)} payout, your expected ROI is +${formatPercent(expectedROI)} per 100 trades. This is a sustainable trading edge.`;
+                } else if (expectedROI >= -2) {
+                    roiText.textContent = `With a ${formatPercent(userWinRate)} win rate at ${formatPercent(payout, 0)} payout, you're near break-even (${formatPercent(expectedROI)} ROI). A small improvement in win rate could make you profitable.`;
+                } else {
+                    roiText.textContent = `With a ${formatPercent(userWinRate)} win rate at ${formatPercent(payout, 0)} payout, you're losing ${formatPercent(Math.abs(expectedROI))} per 100 trades. You need to improve your win rate above ${formatPercent(breakEvenRate)} to profit.`;
+                }
+            } else {
+                document.getElementById('performanceCard').classList.add('hidden');
+                document.getElementById('expectedReturnCard').classList.add('hidden');
+            }
+
+            // Update broker comparison table
+            updateComparisonTable(userWinRate, payout, rebate);
+
+            // Update ROI chart
+            updateROIChart(payout, userWinRate, breakEvenRate, rebate);
+
+            // Update main recommendation
+            updateRecommendation(userWinRate, payout, breakEvenRate, expectedROI, rebate);
+        }
+
+        function updateComparisonTable(userWinRate, currentPayout, rebate) {
+            const payouts = [70, 75, 80, 85, 90, 95];
+            const tbody = document.getElementById('comparisonTableBody');
+            const effectiveLoss = 100 - rebate;
+
+            let html = '';
+
+            payouts.forEach(payout => {
+                const breakEven = (effectiveLoss / (payout + effectiveLoss)) * 100;
+                let roi = 0;
+                let status = '';
+                let statusClass = '';
+
+                if (userWinRate > 0) {
+                    roi = ((userWinRate / 100 * payout) - ((100 - userWinRate) / 100 * effectiveLoss));
+
+                    if (roi >= 15) {
+                        status = '&#9733; EXCELLENT';
+                        statusClass = 'excellent';
+                    } else if (roi > 2) {
+                        status = '&#10004; PROFITABLE';
+                        statusClass = 'profitable';
+                    } else if (roi >= -2) {
+                        status = '&#9888; MARGINAL';
+                        statusClass = 'marginal';
+                    } else {
+                        status = '&#10006; LOSING';
+                        statusClass = 'losing';
+                    }
+                }
+
+                const isCurrentRow = Math.abs(payout - currentPayout) < 1;
+
+                html += `
+                    <tr class="${isCurrentRow ? 'current-row' : ''}">
+                        <td>${payout}%${isCurrentRow ? ' (current)' : ''}</td>
+                        <td>${breakEven.toFixed(2)}%</td>
+                        <td>${userWinRate > 0 ? (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%' : '-'}</td>
+                        <td class="status-cell ${statusClass}">${userWinRate > 0 ? status : '-'}</td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function updateROIChart(payout, userWinRate, breakEvenRate, rebate) {
+            const chart = document.getElementById('roiChart');
+            const effectiveLoss = 100 - rebate;
+
+            // Win rates to display
+            const winRates = [40, 45, 50, Math.round(breakEvenRate), 55, 60, 65, 70];
+
+            // Make sure we include the user's win rate if it's reasonable
+            if (userWinRate > 0 && !winRates.includes(Math.round(userWinRate))) {
+                winRates.push(Math.round(userWinRate));
+                winRates.sort((a, b) => a - b);
+            }
+
+            // Calculate ROIs
+            const roiData = winRates.map(wr => {
+                const roi = ((wr / 100 * payout) - ((100 - wr) / 100 * effectiveLoss));
+                return { winRate: wr, roi: roi };
+            });
+
+            // Find max absolute ROI for scaling
+            const maxAbsROI = Math.max(...roiData.map(d => Math.abs(d.roi)), 30);
+
+            let html = '';
+
+            roiData.forEach(data => {
+                const isUserWinRate = userWinRate > 0 && Math.abs(data.winRate - userWinRate) < 1;
+                const isBreakEven = Math.abs(data.winRate - breakEvenRate) < 1;
+
+                // Calculate bar height (50% is the zero line)
+                const heightPercent = Math.abs(data.roi) / maxAbsROI * 45; // 45% max so it fits well
+                const isPositive = data.roi >= 0;
+
+                let barClass = isPositive ? 'positive' : 'negative';
+                if (Math.abs(data.roi) < 2) barClass = 'neutral';
+                if (isUserWinRate) barClass += ' current';
+
+                const barStyle = isPositive
+                    ? `height: ${heightPercent}%; bottom: 50%;`
+                    : `height: ${heightPercent}%; bottom: ${50 - heightPercent}%;`;
+
+                html += `
+                    <div class="chart-bar ${barClass}" style="${barStyle}">
+                        <span class="value" style="color: ${isPositive ? 'var(--success)' : 'var(--danger)'}">${data.roi >= 0 ? '+' : ''}${data.roi.toFixed(0)}%</span>
+                        <span class="label">${data.winRate}%${isBreakEven ? '*' : ''}${isUserWinRate ? ' (you)' : ''}</span>
+                    </div>
+                `;
+            });
+
+            chart.innerHTML = html;
+        }
+
+        function updateRecommendation(userWinRate, payout, breakEvenRate, expectedROI, rebate) {
+            const recommendationEl = document.getElementById('mainRecommendation');
+            const effectiveLoss = 100 - rebate;
+
+            if (userWinRate <= 0) {
+                recommendationEl.innerHTML = `
+                    With a <strong>${payout}% payout</strong>, you need to maintain a win rate above
+                    <strong>${breakEvenRate.toFixed(2)}%</strong> to be profitable.
+                    Enter your current win rate above to see detailed profitability analysis and
+                    broker comparison.
+                `;
+                return;
+            }
+
+            // Find the best payout improvements
+            const payouts = [70, 75, 80, 85, 90, 95];
+            let betterPayouts = [];
+
+            payouts.forEach(p => {
+                if (p > payout) {
+                    const newROI = ((userWinRate / 100 * p) - ((100 - userWinRate) / 100 * effectiveLoss));
+                    betterPayouts.push({ payout: p, roi: newROI, improvement: newROI - expectedROI });
+                }
+            });
+
+            if (expectedROI >= 10) {
+                // Excellent performance
+                recommendationEl.innerHTML = `
+                    <strong>Excellent!</strong> Your ${userWinRate}% win rate combined with ${payout}% payout gives you
+                    a strong edge of <strong>+${expectedROI.toFixed(1)}% ROI</strong>.
+                    You're significantly above the ${breakEvenRate.toFixed(1)}% break-even threshold.
+                    Focus on maintaining this win rate and consider increasing position sizes cautiously.
+                `;
+            } else if (expectedROI > 0) {
+                // Profitable but could be better
+                let recommendation = `Your ${userWinRate}% win rate is profitable with your current broker (${payout}% payout),
+                    generating <strong>+${expectedROI.toFixed(1)}% ROI</strong>.`;
+
+                if (betterPayouts.length > 0) {
+                    const best = betterPayouts[0];
+                    recommendation += ` Switching to a broker with ${best.payout}% payout would increase your ROI
+                        from ${expectedROI.toFixed(1)}% to <strong>${best.roi.toFixed(1)}%</strong>.`;
+                }
+
+                recommendationEl.innerHTML = recommendation;
+            } else if (expectedROI > -5) {
+                // Near break-even
+                const neededImprovement = breakEvenRate - userWinRate + 2;
+                recommendationEl.innerHTML = `
+                    <strong>Warning:</strong> You're near break-even with ${expectedROI.toFixed(1)}% ROI.
+                    To become sustainably profitable, either improve your win rate by
+                    <strong>${neededImprovement.toFixed(1)} percentage points</strong> or find a broker
+                    with higher payout. A ${(payout + 5)}% payout broker would make you profitable immediately.
+                `;
+            } else {
+                // Losing money
+                recommendationEl.innerHTML = `
+                    <strong>Alert:</strong> At ${userWinRate}% win rate with ${payout}% payout, you're losing
+                    <strong>${Math.abs(expectedROI).toFixed(1)}%</strong> per 100 trades.
+                    You need to increase your win rate to at least <strong>${breakEvenRate.toFixed(1)}%</strong>
+                    (currently ${(breakEvenRate - userWinRate).toFixed(1)} points short).
+                    Consider paper trading until you can consistently exceed this threshold.
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
